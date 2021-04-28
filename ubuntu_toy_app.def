@@ -1,0 +1,10 @@
+Bootstrap: localimage
+From: Ubuntu_Anaconda.sif
+
+%files
+	SW_src/toy_script.py /SW_src/
+#
+%runscript
+	python /SW_src/toy_script.py
+	
+	

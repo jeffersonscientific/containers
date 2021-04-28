@@ -1,0 +1,25 @@
+Bootstrap: localimage
+From: ubuntu_basic_20.10.sif
+
+%setup
+	mkdir ${SINGULARITY_ROOTFS}/SW_src
+
+%files
+	SW_src/Anaconda3-2020.11-Linux-x86_64.sh /SW_src/
+	#SW_src/toy_script.py /SW_src/
+
+%post
+    # Ana-/Mini-Conda:
+    #  NOTE: I think if we install Miniconda, we have to install all of our packages; Anaconda comes with a heap of packages 
+    #   installed (what makes it not-mini). Also, looks like we can get a much newer Python (3.9 vs 3.8) with Miniconda.
+    #wget https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh
+    #cd SW_src
+    # wget https://repo.anaconda.com/miniconda/Miniconda3-py39_4.9.2-Linux-x86_64.sh
+    # ./Miniconda3-py39_4.9.2-Linux-x86_64.sh
+    chmod 755 /SW_src/Anaconda3-2020.11-Linux-x86_64.sh
+    /SW_src/Anaconda3-2020.11-Linux-x86_64.sh -b -p /anaconda3
+    /anaconda3/bin/conda init
+
+%environment
+	PATH=/anaconda3/bin:$PATH
+

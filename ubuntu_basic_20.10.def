@@ -1,0 +1,74 @@
+Bootstrap: docker
+From: ubuntu:20.10
+
+%setup
+	mkdir /SW_src
+	mkdir /app
+	
+%post
+    apt-get -y update
+    #apt-get -y install fortune cowsay lolcat
+    #
+    apt-get -y install wget curl zip vim
+    apt-get -y install cmake
+    apt-get -y install autoconf
+    apt-get -y install pkg-config
+    #
+    # NOTE: we might only need g++. We only need these for the core builds.
+    apt-get -y install g++ gcc gfortran
+    apt-get -y install git
+    apt-get -y install libblas-dev liblapack-dev
+    apt-get -y install python3 python3-dev
+    #
+    echo "git spack..."
+    #git clone https://github.com/spack/spack ~/spack
+    #cd ~/spack
+    #git checkout releases/v0.16.1
+    #
+    # TODO: copy this repo, to save some bandwidth? Same with Anaconda (see below)
+    wget https://github.com/spack/spack/archive/refs/tags/v0.16.1.zip
+    unzip v0.16.1.zip -d spack
+    cd /spack/spack-0.16.1
+    . share/spack/setup-env.sh
+    #
+    ## Ana-/Mini-Conda:
+    #   NOTE: For most purposes, just installing python3 seems to suffice. 
+    ##  NOTE: I think if we install Miniconda, we have to install all of our packages; Anaconda comes with a heap of packages 
+    ##   installed (what makes it not-mini). Also, looks like we can get a much newer Python (3.9 vs 3.8) with Miniconda.
+    ##wget https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh
+    #cd SW_src
+    ## wget https://repo.anaconda.com/miniconda/Miniconda3-py39_4.9.2-Linux-x86_64.sh
+    ## ./Miniconda3-py39_4.9.2-Linux-x86_64.sh
+    #./Anaconda3-2020.11-Linux-x86_64.sh -b
+    
+    #
+    #echo "Begin Spack installs:"
+    spack install gcc@10.
+    spack compiler find `spack location -i gcc@10.`
+    spack load gcc
+    ##
+    #spack install mpich@3.3.2 %gcc@10.1.0
+    #spack load mpich
+    ##
+    #spack install netcdf-fortran@4.5.3 ^netcdf-c~mpi @4.7.4 ^hdf5+fortran~mpi @1.12.0 %gcc@10.1.0
+    #spack load netcdf-fortran
+    #spack load netcdf-c
+    ##
+    ln -sf `spack location -i gcc` /opt/gcc
+    #ln -sf `spack location -i mpich` /opt/mpich
+    #ln -sf `spack location -i netcdf-c` /opt/netcdf-c
+    #ln -sf `spack location -i netcdf-fortran` /opt/netcdf-fortran
+    #ln -sf `spack location -i hdf5` /opt/hdf5
+
+%environment
+    #export LC_ALL=C
+	export SPACK_PATH=spack/spack-0.16.1
+	. $SPACK_PATH/share/spack/setup-env.sh
+	
+	#export PATH=/opt/gcc/bin:/opt/mpich/bin:/opt/netcdf-c/bin:/opt/netcdf-fortran/bin:/opt/hdf5/bin:$PATH
+	#export LD_LIBRARY_PATH:/opt/gcc/lib:/opt/mpich/lib:/opt/netcdf-c/lib:/opt/netcdf-fortran/lib:/opt/hdf5/lib:$LD_LIBRARY_PATH
+	#export LIBRARY_PATH=$LD_LIBRARY_PATH
+
+%runscript
+    #fortune | cowsay | lolcat
+    echo "I am a container. My name is `hostname`".

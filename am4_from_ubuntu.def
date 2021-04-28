@@ -1,0 +1,69 @@
+Bootstrap: localimage
+From: am4_ubuntu_pre
+
+%post
+	apt-get -y update
+    #apt-get -y install fortune cowsay lolcat
+    #
+    #apt-get -y install wget curl
+    apt-get -y install zip vim
+    #apt-get -y install cmake
+    apt-get -y install autoconf
+    #apt-get -y install g++ gcc gfortran
+    #apt-get -y install git
+    apt-get -y install pkg-config
+    apt-get -y install libblas-dev liblapack-dev
+    #apt-get -y install build-essential python-libdev
+    #apt-get -y install python3
+    #
+    if [[ ! -d /app ]]; then
+ 	   mkdir /app
+ 	fi
+    #chmod 777 /app
+    
+    # .zip files don't include submodules, so these will not work.
+    #wget https://github.com/NOAA-GFDL/AM4/archive/refs/tags/xanadu_2021.01.zip
+#   #unzip xanadu_2021.01.zip
+#   #cd AM4-xanadu_2021.01
+	cd /app/AM4/exec
+	echo "** AM4: `pwd`"
+	#
+    make clean
+    make
+#    for lib in coupler/libcoupler.a atmos_dyn/libatmos_dyn.a ice_sis/libice_sis.a atmos_cubed_sphere/libatmos_cubed_sphere.a atmos_phys/libatmos_phys.a mom6/libmom6.a land_lad2/libland_lad2.a fms/libfms.a am4_xanadu_2021.01.x
+#    do
+#    	echo "*** MAKE: $lib"
+#    	make $lib
+#    done
+	#
+	cp am4_xanadu_2021.01.x /app/
+
+%files
+	AM4/ /app/AM4
+
+%environment
+    #export LC_ALL=C
+    #export PATH=/usr/games:$PATH
+	export SPACK_PATH=spack/spack-0.16.1
+	. $SPACK_PATH/share/spack/setup-env.sh
+	#
+	export PATH=/opt/gcc/bin:/opt/mpich/bin:/opt/netcdf-c/bin:/opt/netcdf-fortran/bin:/opt/hdf5/bin:$SPACK_PATH:$PATH
+	export LD_LIBRARY_PATH=/opt/gcc/lib:/opt/mpich/lib:/opt/netcdf-c/lib:/opt/netcdf-fortran/lib:/opt/hdf5/lib:/opt/hdf5/include:$LD_LIBRARY_PATH
+	export CPATH=/opt/gcc/include:/opt/mpich/include:/opt/netcdf-c/include:/opt/netcdf-fortran/include:/opt/hdf5/include:$CPATH
+	export LIBRARY_PATH=$LD_LIBRARY_PATH
+	#
+	export PKG_CONFIG_PATH=/opt/mpich/lib/pkgconfig:$PKG_CONFIG_PATH
+	#
+	export MPI_FLAGS=" `pkg-config --cflags-only-I mpich` "
+	export MPI_LIBS=" `pkg-config --libs mpich` "
+	export HDF_INCLUDE=" -I /opt/hdf5/include "
+	export HDF_LIBS=" -L/opt/hdf5/lib -lhdf5 -lhdf5_fortran -lhdf5_hl -lhdf5hl_fortran "
+	export INCLUDES=" -I /opt/gcc/include -I /opt/mpich/include -I /opt/netcdf-c/include -I /opt/netcdf-fortran/include -I/opt/hdf5/include -fcray-pointer"
+	export LIBS=" -L /opt/gcc/lib -L /opt/mpich/lib -L /opt/netcdf-c/lib -L /opt/netcdf-fortran/lib -L /opt/hdf5/lib "
+	#
+	# try this as well (NOTE: we need to add the $(USER_LIBS) to the primary Makefile, or hijack a different variable, like bundle with HDF_LIBS ?
+	# ./am4_from_ubuntu/usr/lib/x86_64-linux-gnu for libblas and liblapack
+	export USER_LIBS=" -L/usr/lib/x86_64-linux-gnu -lblas -llapack "
+	
+	
+	export gcc=on

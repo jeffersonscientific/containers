@@ -1,0 +1,85 @@
+Bootstrap: localimage
+From: ubuntu_base.sif
+#From: gfdl_base_ubuntu.sif
+
+%post
+    apt-get -y update
+    
+    #
+    echo "Begin Spack installs:"
+    . $SPACK_PATH/share/spack/setup-env.sh
+    echo "**** ${SPACK_PATH}"
+    #spack install gcc@10.1.0
+    spack compiler find `spack location -i gcc@10.1.0`
+    spack load gcc
+    #
+    spack install mpich@3.3.2 %gcc@10.1.0
+    spack load mpich
+    #
+    # NOTE: hdf5@1.12 gives a checksum warning and does not fail-up to 1.12.0, so be more specific, or ommit version and take default
+    #  1.10.7
+    # somehow, netcdf does not recognize this install. Maybe if we spack load hdf5 ? But i think we can just skip it
+    #  and install everything in one line.
+    #spack install hdf5 +fortran +mpi +cxx @1.12.0 ^mpich@3.3.2
+    #
+    # NOTE: this is netcdf and mpi *minus* mpi support, which I think TR uses to keep his AM4 containers a bit lighter,
+    #  because AM4 writes separate output for each task, then the user compiles at the end (see FRE-nctools). But, for most
+    #  purposes, it's probably better to just enable MPI for HDF5 and NetCDF. ? .
+    
+    #spack install netcdf-fortran@4.5.3^netcdf-c~mpi@4.7.4^hdf5+fortran~mpi @1.12.0%gcc@10.1.0
+    spack install netcdf-fortran @4.5.3^netcdf-c+parallel-netcdf+mpi@4.7.4^hdf5 +fortran +mpi +cxx @1.12.0 ^mpich@3.3.2 %gcc@10.1.0
+    #
+    # probalby don't need these `spack load` commands, since we then map those paths to /opt/{} .
+    
+#    spack load hdf5
+#    spack load netcdf-fortran
+#    spack load netcdf-c
+    #
+    ln -sf `spack location -i gcc` /opt/gcc
+    ln -sf `spack location -i mpich` /opt/mpich
+    ln -sf `spack location -i netcdf-c` /opt/netcdf-c
+    ln -sf `spack location -i netcdf-fortran` /opt/netcdf-fortran
+    ln -sf `spack location -i hdf5` /opt/hdf5
+    #
+    # this should go into app* ?
+    # get mkmf:
+    #wget https://github.com/NOAA-GFDL/mkmf/archive/refs/heads/master.zip -O /app/mkmf.zip
+    #cd /app
+    #unzip mkmf.zip
+    #ln -sf /app/mkmf-master/bin/mkmf /app/mkmf
+    #cd ..
+
+%environment
+    #export LC_ALL=C
+    #export PATH=/usr/games:$PATH
+	export SPACK_PATH=/spack/spack-0.16.1
+	#
+	export PATH=/opt/gcc/bin:/opt/mpich/bin:/opt/netcdf-c/bin:/opt/netcdf-fortran/bin:/opt/hdf5/bin:$SPACK_PATH/bin:$PATH
+	export LD_LIBRARY_PATH=/opt/gcc/lib:/opt/mpich/lib:/opt/netcdf-c/lib:/opt/netcdf-fortran/lib:/opt/hdf5/lib:/opt/hdf5/include:$LD_LIBRARY_PATH
+	export CPATH=/opt/gcc/include:/opt/mpich/include:/opt/netcdf-c/include:/opt/netcdf-fortran/include:/opt/hdf5/include:$CPATH
+	export LIBRARY_PATH=$LD_LIBRARY_PATH
+	#
+	export PKG_CONFIG_PATH=/opt/mpich/lib/pkgconfig:$PKG_CONFIG_PATH
+	#
+	export MPI_FLAGS=" `pkg-config --cflags-only-I mpich` "
+	export MPI_LIBS=" `pkg-config --libs mpich` "
+	export HDF_INCLUDE=" -I /opt/hdf5/include "
+	export HDF_LIBS=" -L/opt/hdf5/lib -lhdf5 -lhdf5_fortran -lhdf5_hl -lhdf5hl_fortran "
+	export INCLUDES=" -I /opt/gcc/include -I /opt/mpich/include -I /opt/netcdf-c/include -I /opt/netcdf-fortran/include -I/opt/hdf5/include -fcray-pointer"
+	export LIBS=" -L /opt/gcc/lib -L /opt/mpich/lib -L /opt/netcdf-c/lib -L /opt/netcdf-fortran/lib -L /opt/hdf5/lib "
+	#
+	export USER_LIBS=" -L/usr/lib/x86_64-linux-gnu -lblas -llapack "
+	# try this as well (NOTE: we need to add the $(USER_LIBS) to the primary Makefile, or hijack a different variable...
+	# ./am4_from_ubuntu/usr/lib/x86_64-linux-gnu for libblas and liblapack
+	#
+	export gcc=on
+
+%labels
+	Author Mark R. Yoder, Ph.D.
+	Name GFDL_base_ubuntu
+	Version v1.0.0
+	
+%runscript
+    #fortune | cowsay | lolcat
+    #
+    

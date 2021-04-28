@@ -1,0 +1,16 @@
+Bootstrap: docker
+From: thomasrobinson/am4:2021.01-gcc10
+
+%runscript
+	echo "TR's AM4, in a Singularity container."
+	AM4_XANADU_2021.01.x
+
+%environment
+	export MPICH_DIR=/opt/mpich
+	export SINGULARITY_MPICH_DIR=$MPICH_DIR
+	export SINGULARITYENV_APPEND_PATH=$MPICH_DIR/bin
+	export SINGULARITYENV_APPEND_LD_LIBRARY_PATH=$MPICH_DIR/lib
+	#
+	export MANPATH=$MPICH_DIR/share/man:$MANPATH
+
+
