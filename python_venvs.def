@@ -1,0 +1,45 @@
+Bootstrap: docker
+From: ubuntu:latest
+
+%post
+    apt-get update
+    apt-get -y install build-essential
+    apt-get -y install python3-venv
+    apt-get -y install ipython3
+
+    # for convenience:
+    ln -s /usr/bin/python3 /usr/bin/python
+    ln -s /usr/bin/ipython3 /usr/bin/ipython
+
+    # Create envs and install packages
+    mkdir /PYTHON
+    cd /PYTHON
+    #
+    # create a test environment:
+    python3 -m venv envscience
+    cd ..
+    . /PYTHON/envscience/bin/activate
+    #
+    #pip install ipython
+    pip install jupyter
+    pip install numpy
+    pip install sklearn
+    #
+    # create another test environment:
+    deactivate
+    cd /PYTHON
+    python3 -m venv envctl
+    #cd ..
+    #. /PYTHON/envctl/bin/activate
+    #
+    # register the environment here?
+    python -m ipykernel install --name=envscience --display-name=apptainer-science --prefix=/PYTHON/envscience
+    python -m ipykernel install --name=envctl --display-name=apptainer-ctl --prefix=/PYTHON/ctl
+
+    # some special environment things for singularity
+    #echo ". /opt/conda/etc/profile.d/conda.sh" >> $SINGULARITY_ENVIRONMENT
+    #echo "conda activate myenv" >> $SINGULARITY_ENVIRONMENT
+%runscript
+    . /PYTHON/env_science/bin/activate
+    #python myscript.py
+    ipython
