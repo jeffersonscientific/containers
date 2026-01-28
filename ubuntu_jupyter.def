@@ -1,0 +1,38 @@
+Bootstrap: docker
+From: ubuntu:latest
+
+%post
+    apt-get update
+    apt-get -y install build-essential
+    apt-get -y install python3
+    apt-get -y install python3-venv
+    apt-get -y install ipython3
+    apt-get -y install python3-pip
+
+    # for convenience:
+    ln -s /usr/bin/python3 /usr/bin/python
+    ln -s /usr/bin/ipython3 /usr/bin/ipython
+
+    # Create envs and install packages
+    mkdir /PYTHON
+    cd /PYTHON
+    python3 -m venv envscience
+    cd ..
+    . /PYTHON/envscience/bin/activate
+    #
+    #pip install ipython
+    pip install jupyter
+    pip install numpy
+    pip install beautifulsoup4
+    #
+    # register the environment here?
+    python -m ipykernel install --name=envscience --display-name=apptainer-science --prefix=/PYTHON/envscience
+
+    # some special environment things for singularity
+    #echo ". /opt/conda/etc/profile.d/conda.sh" >> $SINGULARITY_ENVIRONMENT
+    #echo "conda activate myenv" >> $SINGULARITY_ENVIRONMENT
+%runscript
+    . /PYTHON/envscience/bin/activate
+    #python myscript.py
+    #ipython
+    jupyter lab --no-browser --ip=$(hostname -s) --port=8000
